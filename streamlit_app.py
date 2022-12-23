@@ -45,8 +45,8 @@ try:
     back_from_function = get_fruityvice_data(fruit_choice)
     # display table on page
     streamlit.dataframe(back_from_function)
-    
- except URLError as e:
+
+except URLError as e:
   streamlit.error()
 
 streamlit.stop()
