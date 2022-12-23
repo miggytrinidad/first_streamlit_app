@@ -2,6 +2,7 @@ import streamlit
 import pandas as pd
 import requests
 import snowflake.connector
+from urllib.error import URLError
 
 streamlit.title('My Parents New Healthy Diner')
 
@@ -23,21 +24,29 @@ fruits_to_show = my_fruit_list.loc[fruits_selected]
 #display table on the page
 streamlit.dataframe(fruits_to_show)
 
+#create repeatable code block
+def get_fruityvice_data(this_fruit_choice):
+  fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
+  # use pandas to display results
+  fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
+  
+  return fruityvice_normalized  
+
 #API
 streamlit.header("Fruityvice Fruit Advice!")
+try:
+  #get user input
+  fruit_choice = streamlit.text_input('What fruit would you like information about?','Kiwi')
+  #streamlit.write('The user entered ', fruit_choice)
+  
+  if not fruit_choice:
+    streamlit.error("Please select a fruit to get information:")
+  else:
+    back_from_function = get_fruityvice_data(fruit_choice)
+    # display table on page
+    streamlit.dataframe(back_from_function)
 
-#get user input
-fruit_choice = streamlit.text_input('What fruit would you like information about?','Kiwi')
-streamlit.write('The user entered ', fruit_choice)
-
-fruityvice_response = requests.get("https://fruityvice.com/api/fruit/" + fruit_choice)
-# streamlit.text(fruityvice_response.json())
-
-# use pandas to display results
-fruityvice_normalized = pd.json_normalize(fruityvice_response.json())
-# display table on page
-streamlit.dataframe(fruityvice_normalized)
-
+streamlit.stop()
 #Snowflake
 my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
 my_cur = my_cnx.cursor()
@@ -48,7 +57,9 @@ streamlit.dataframe(my_data_rows)
 
 #Allow user to add fruit to list
 add_my_fruit = streamlit.text_input('What fruit would you like to add?','jackfruit')
-streamlit.write('The user entered ', fruit_choice)
+streamlit.write('Thanks for adding  ', add_my_fruit)
+
+my_cur.execute("INSERT INTO fruit_load_list VALUES ('from streamlit')")
 
 
 
